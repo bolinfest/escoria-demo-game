@@ -31,6 +31,7 @@ var hover_stack: Array = []
 # The global id of the topmost item from the hover_stack
 var hotspot_focused: String = ""
 
+var custom_background_input_handler = null
 
 # Register core signals (from escoria.gd)
 func register_core():
@@ -99,6 +100,24 @@ func register_background(background: ESCBackground):
 		"_on_mousewheel_action",
 		[-1]
 	)
+
+
+# Registers a function that has the first chance to process
+# _unhandled_input in an ESCBackground when in GAME_STATE.DEFAULT.
+# The callback receives the InputEvent as its only argument and
+# must represent a bool indicating whether it handled the event.
+# If true, ESCBackground will not attempt to process the event.
+#
+# Note that funcref() is helpful in defining a callback function.
+func register_custom_background_input_handler(callback) -> void:
+	custom_background_input_handler = callback
+
+
+func handle_background_input(event) -> bool:
+	if custom_background_input_handler:
+		return custom_background_input_handler.call_func(event)
+	else:
+		return false
 
 
 # Clear the stack of hovered items
