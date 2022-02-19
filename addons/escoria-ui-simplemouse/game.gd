@@ -41,9 +41,20 @@ Implement methods to react to inputs.
 - _on_event_done(event_name: String)
 """
 
+const SET_ACTION_VERB_OPEN = "set_action_verb_open"
+const SET_ACTION_VERB_PICKUP = "set_action_verb_pickup"
+const SET_ACTION_VERB_PUSH = "set_action_verb_push"
+const SET_ACTION_VERB_CLOSE = "set_action_verb_close"
+const SET_ACTION_VERB_LOOK = "set_action_verb_look"
+const SET_ACTION_VERB_PULL = "set_action_verb_pull"
+const SET_ACTION_VERB_GIVE = "set_action_verb_give"
+const SET_ACTION_VERB_USE = "set_action_verb_use"
+const SET_ACTION_VERB_TALK = "set_action_verb_talk"
+
+
 func _enter_tree():
 	var room_selector_parent = $CanvasLayer/ui/HBoxContainer/VBoxContainer
-	
+
 	if ProjectSettings.get_setting("escoria/debug/enable_room_selector") and \
 			room_selector_parent.get_node_or_null("room_select") == null:
 		room_selector_parent.add_child(
@@ -53,7 +64,41 @@ func _enter_tree():
 			).instance()
 		)
 
-	
+	var input_handler = funcref(self, "_background_input_handler")
+	escoria.inputs_manager.register_custom_background_input_handler(input_handler)
+
+
+func _background_input_handler(event: InputEvent) -> bool:
+	if event.is_action_pressed(SET_ACTION_VERB_OPEN):
+		$mouse_layer/verbs_menu.set_by_name("open")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_PICKUP):
+		$mouse_layer/verbs_menu.set_by_name("pickup")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_PUSH):
+		$mouse_layer/verbs_menu.set_by_name("push")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_CLOSE):
+		$mouse_layer/verbs_menu.set_by_name("close")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_LOOK):
+		$mouse_layer/verbs_menu.set_by_name("look")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_PULL):
+		$mouse_layer/verbs_menu.set_by_name("pull")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_GIVE):
+		$mouse_layer/verbs_menu.set_by_name("give")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_USE):
+		$mouse_layer/verbs_menu.set_by_name("use")
+		return true
+	if event.is_action_pressed(SET_ACTION_VERB_TALK):
+		$mouse_layer/verbs_menu.set_by_name("talk")
+		return true
+	return false
+
+
 func _input(event: InputEvent) -> void:
 	if escoria.main.current_scene and escoria.main.current_scene.game:
 			if event is InputEventMouseMotion:
@@ -61,43 +106,41 @@ func _input(event: InputEvent) -> void:
 					update_tooltip_following_mouse_position(event.position)
 
 
-## BACKGROUND ## 
+## BACKGROUND ##
 
 func left_click_on_bg(position: Vector2) -> void:
 	if escoria.main.current_scene.player:
 		escoria.action_manager.do(
-			escoria.action_manager.ACTION.BACKGROUND_CLICK, 
+			escoria.action_manager.ACTION.BACKGROUND_CLICK,
 			[escoria.main.current_scene.player.global_id, position],
 			true
 		)
 		$mouse_layer/verbs_menu.set_by_name(VERB_WALK)
 		$mouse_layer/verbs_menu.clear_tool_texture()
-	
+
 func right_click_on_bg(position: Vector2) -> void:
 	mousewheel_action(1)
-	
+
 func left_double_click_on_bg(position: Vector2) -> void:
 	if escoria.main.current_scene.player:
 		escoria.action_manager.do(
-			escoria.action_manager.ACTION.BACKGROUND_CLICK, 
+			escoria.action_manager.ACTION.BACKGROUND_CLICK,
 			[escoria.main.current_scene.player.global_id, position, true],
 			true
 		)
 		$mouse_layer/verbs_menu.set_by_name(VERB_WALK)
 		$mouse_layer/verbs_menu.clear_tool_texture()
 
-## ITEM/HOTSPOT FOCUS ## 
+## ITEM/HOTSPOT FOCUS ##
 
 func element_focused(element_id: String) -> void:
 	var target_obj = escoria.object_manager.get_object(element_id).node
 	$tooltip_layer/tooltip.set_target(target_obj.tooltip_name)
 
 	if escoria.action_manager.current_action != "use" \
-			and escoria.action_manager.current_tool == null:
-		if target_obj is ESCItem:
-			$mouse_layer/verbs_menu.set_by_name(
-				escoria.action_to_string(target_obj.default_action)
-			)
+			and escoria.action_manager.current_tool == null \
+			and target_obj is ESCItem:
+				$mouse_layer/verbs_menu.set_by_name(target_obj.default_action)
 
 func element_unfocused() -> void:
 	$tooltip_layer/tooltip.set_target("")
@@ -107,8 +150,8 @@ func element_unfocused() -> void:
 
 func left_click_on_item(item_global_id: String, event: InputEvent) -> void:
 	escoria.action_manager.do(
-		escoria.action_manager.ACTION.ITEM_LEFT_CLICK, 
-		[item_global_id, event], 
+		escoria.action_manager.ACTION.ITEM_LEFT_CLICK,
+		[item_global_id, event],
 		true
 	)
 
@@ -117,19 +160,19 @@ func right_click_on_item(item_global_id: String, event: InputEvent) -> void:
 
 func left_double_click_on_item(item_global_id: String, event: InputEvent) -> void:
 	escoria.action_manager.do(
-		escoria.action_manager.ACTION.ITEM_LEFT_CLICK, 
-		[item_global_id, event], 
+		escoria.action_manager.ACTION.ITEM_LEFT_CLICK,
+		[item_global_id, event],
 		true
-	) 
+	)
 
 
 ## INVENTORY ##
 func left_click_on_inventory_item(inventory_item_global_id: String, event: InputEvent) -> void:
 	escoria.action_manager.do(
-		escoria.action_manager.ACTION.ITEM_LEFT_CLICK, 
+		escoria.action_manager.ACTION.ITEM_LEFT_CLICK,
 		[inventory_item_global_id, event]
 	)
-	
+
 	if escoria.action_manager.current_action == "use":
 		var item = escoria.object_manager.get_object(
 			inventory_item_global_id
@@ -142,7 +185,7 @@ func left_click_on_inventory_item(inventory_item_global_id: String, event: Input
 			$mouse_layer/verbs_menu.set_tool_texture(
 				item.inventory_item.texture_normal
 			)
-			
+
 
 func right_click_on_inventory_item(inventory_item_global_id: String, event: InputEvent) -> void:
 	mousewheel_action(1)
@@ -178,8 +221,8 @@ func mousewheel_action(direction: int):
 
 func hide_ui():
 	$CanvasLayer/ui/HBoxContainer/inventory_ui.hide()
-	
-	
+
+
 func show_ui():
 	$CanvasLayer/ui/HBoxContainer/inventory_ui.show()
 
@@ -214,7 +257,7 @@ func pause_game():
 func apply_custom_settings(custom_settings: Dictionary):
 	if custom_settings.has("a_custom_setting"):
 		escoria.logger.info(
-			"custom setting value loaded:", 
+			"custom setting value loaded:",
 			[custom_settings["a_custom_setting"]]
 		)
 
@@ -223,7 +266,7 @@ func get_custom_data() -> Dictionary:
 	return {
 		"ui_type": "simplemouse"
 	}
-	
+
 
 # Update the tooltip
 #
@@ -232,15 +275,15 @@ func get_custom_data() -> Dictionary:
 # - p_position: Position of the mouse
 func update_tooltip_following_mouse_position(p_position: Vector2):
 	var corrected_position = p_position
-	
+
 	# clamp TOP
 	if tooltip_node.tooltip_distance_to_edge_top(p_position) <= mouse_tooltip_margin:
 		corrected_position.y = mouse_tooltip_margin
-	
+
 	# clamp BOTTOM
 	if tooltip_node.tooltip_distance_to_edge_bottom(p_position + tooltip_node.rect_size) <= mouse_tooltip_margin:
 		corrected_position.y = escoria.game_size.y - mouse_tooltip_margin - tooltip_node.rect_size.y
-	
+
 	# clamp LEFT
 	if tooltip_node.tooltip_distance_to_edge_left(p_position - tooltip_node.rect_size/2) <= mouse_tooltip_margin:
 		corrected_position.x = mouse_tooltip_margin
@@ -248,7 +291,7 @@ func update_tooltip_following_mouse_position(p_position: Vector2):
 	# clamp RIGHT
 	if tooltip_node.tooltip_distance_to_edge_right(p_position + tooltip_node.rect_size/2) <= mouse_tooltip_margin:
 		corrected_position.x = escoria.game_size.x - mouse_tooltip_margin - tooltip_node.rect_size.x
-	
+
 	tooltip_node.anchor_right = 0.2
 	tooltip_node.rect_position = corrected_position + tooltip_node.offset_from_cursor
 
