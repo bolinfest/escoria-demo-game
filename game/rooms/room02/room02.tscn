@@ -331,6 +331,7 @@ esc_script = "res://game/rooms/room02/esc/button.esc"
 tooltip_name = "button"
 default_action = "use"
 dialog_color = Color( 0.196078, 1, 0, 1 )
+interact_node = NodePath("../button_left_interaction")
 animations = null
 
 [node name="Position2D" type="Position2D" parent="button_left"]
@@ -342,6 +343,11 @@ shape = SubResource( 6 )
 [node name="ESCLocation" type="Position2D" parent="button_left"]
 position = Vector2( 369, 375 )
 script = ExtResource( 8 )
+
+[node name="button_left_interaction" type="Area2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="button_left_interaction"]
+polygon = PoolVector2Array( 307, 350, 261, 399, 427, 398, 424, 349 )
 
 [node name="button_right2" type="Area2D" parent="."]
 pause_mode = 1

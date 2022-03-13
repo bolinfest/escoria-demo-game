@@ -128,6 +128,14 @@ export(NodePath) var animation_player_node: NodePath = "" \
 # as a camera target
 export(NodePath) var camera_node
 
+# Path to a CollisionShape2D or CollisionPolygon2D that delimits where a player can
+# Path to an Area2D that delimits where a player can
+# stand to be "close enough" to act on this `ESCItem`. Designed to be more forgiving
+# than using a `Position2D` to determine the result of `get_interact_position()`.
+#
+# Should not be a child of this `ESCItem` because that would interfere
+# with the `_detect_children()` logic.
+export(NodePath) var interact_node
 
 # ESCAnimationsResource (for walking, idling...)
 var animations: ESCAnimationResource
@@ -343,11 +351,32 @@ func get_interact_position() -> Vector2:
 	for c in get_children():
 		if c is Position2D:
 			interact_position = c.global_position
+			# Note we do not break here because this logic chooses the *last*
+			# Position2D child, by design.
 
 	if interact_position == null and collision != null:
 		interact_position = collision.global_position
 
 	return interact_position
+
+
+func can_interact_from(player_pos: Vector2, destination_pos: Vector2) -> bool:
+	var interact_area = get_node(interact_node)
+	if interact_area is Area2D:
+		var colliders = get_world_2d().direct_space_state.intersect_point(
+			player_pos,
+			32,
+			[],
+			2147483647,
+			true,
+			true
+		)
+		for collider_dict in colliders:
+			if collider_dict.collider == interact_area:
+				return true
+		return false
+	else:
+		return player_pos.is_equal_approx(destination_pos)
 
 
 # React to the mouse entering the item by emitting the respective signal
