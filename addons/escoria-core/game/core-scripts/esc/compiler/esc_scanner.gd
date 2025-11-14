@@ -263,7 +263,12 @@ func _is_alphanumeric(c: String) -> bool:
 
 
 func _identifier() -> void:
-	while _is_alphanumeric(_peek()):
+	# Identifiers starting with '$' are used as shorthand for global IDs and
+	# are allowed to contain hyphens (e.g. `$closet-door`). Other identifiers
+	# still treat '-' as the subtraction operator.
+	var allow_hyphen_in_identifier: bool = _source[_start] == '$'
+
+	while _is_alphanumeric(_peek()) or (allow_hyphen_in_identifier and _peek() == '-'):
 		_advance()
 
 	var text: String = _source.substr(_start, _current - _start)
